@@ -1,0 +1,62 @@
+{
+  "timestamp": "2026-10-19T10:20:49.787911+00:00",
+  "simulated": true,
+  "scenario": "storage_full",
+  "environment": {
+    "temperature_c": 21.8,
+    "humidity_percent": 44.8,
+    "smoke_detected": false,
+    "fire_detected": false,
+    "power_status": "normal"
+  },
+  "servers": {
+    "server_01": {
+      "cpu_usage_percent": 34.2,
+      "memory_usage_percent": 49.4,
+      "cpu_temperature_c": 52.4,
+      "storage": {
+        "disk_total_gb": 2000,
+        "disk_used_gb": 1001.06,
+        "disk_free_gb": 998.94,
+        "disk_usage_percent": 50.05,
+        "disk_temperature_c": 34.9,
+        "disk_health": "healthy"
+      },
+      "network": {
+        "latency_ms": 18.8
+      }
+    },
+    "server_02": {
+      "cpu_usage_percent": 57.9,
+      "memory_usage_percent": 53.0,
+      "cpu_temperature_c": 63.1,
+      "storage": {
+        "disk_total_gb": 2000,
+        "disk_used_gb": 1101.57,
+        "disk_free_gb": 898.43,
+        "disk_usage_percent": 55.08,
+        "disk_temperature_c": 34.5,
+        "disk_health": "healthy"
+      },
+      "network": {
+        "latency_ms": 20.3
+      }
+    },
+    "server_03": {
+      "cpu_usage_percent": 58.1,
+      "memory_usage_percent": 55.5,
+      "cpu_temperature_c": 63.1,
+      "storage": {
+        "disk_total_gb": 2000,
+        "disk_used_gb": 2000,
+        "disk_free_gb": 0,
+        "disk_usage_percent": 100.0,
+        "disk_temperature_c": 35.0,
+        "disk_health": "healthy"
+      },
+      "network": {
+        "latency_ms": 17.5
+      }
+    }
+  }
+}
