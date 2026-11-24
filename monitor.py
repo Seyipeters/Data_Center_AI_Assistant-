@@ -1,7 +1,11 @@
+
 import os
 import time
+from datetime import datetime, timezone
+
 import firebase_admin
 from firebase_admin import credentials, db
+from briefing import build_briefing, save_briefing
 
 
 # Connect to Firebase
@@ -14,9 +18,7 @@ def connect_firebase():
     )
 
     print("Firebase connection established.")
-
     return db.reference("/current")
-
 
 
 # Retrieve the latest reading
@@ -32,8 +34,6 @@ def get_reading(reference):
 
 # Check whether the reading is outdated
 def check_data_freshness(data):
-    from datetime import datetime, timezone
-
     timestamp = datetime.fromisoformat(data["timestamp"])
     current_time = datetime.now(timezone.utc)
 
@@ -46,7 +46,6 @@ def check_data_freshness(data):
     return True
 
 
-
 # Detect environmental anomalies
 def check_environment(data):
     environment = data["environment"]
@@ -56,7 +55,7 @@ def check_environment(data):
     humidity = environment["humidity_percent"]
 
     if temperature > 32:
-    	alerts.append(f"CRITICAL: Room overheating: {temperature} C")
+        alerts.append(f"CRITICAL: Room overheating: {temperature} C")
 
     elif temperature > 27:
         alerts.append(f"WARNING: High room temperature: {temperature} C")
@@ -66,6 +65,7 @@ def check_environment(data):
 
     elif temperature < 18:
         alerts.append(f"WARNING: Low room temperature: {temperature} C")
+
     if humidity > 60:
         alerts.append(f"WARNING: High humidity: {humidity}%")
 
@@ -133,6 +133,7 @@ def check_servers(data):
 
 # Main monitoring loop
 def main():
+
     reference = connect_firebase()
 
     print("Data Center AI Assistant started.")
@@ -140,6 +141,7 @@ def main():
 
     try:
         while True:
+
             try:
                 data = get_reading(reference)
 
@@ -148,22 +150,37 @@ def main():
                     alerts = check_environment(data)
                     alerts.extend(check_servers(data))
 
+                    # Prioritise critical alerts
+                    alerts.sort(
+                        key=lambda alert: not alert.startswith("CRITICAL")
+                    )
+
+                    # Generate and save system briefing
+                    briefing = build_briefing(
+                        data, alerts, data_fresh=True
+                    )
+
+                    save_briefing(briefing)
+
+                    # Display monitoring results
                     print("\n" + "=" * 50)
                     print("DATA CENTER MONITOR")
                     print("=" * 50)
 
                     print("Timestamp:", data["timestamp"])
                     print("Scenario:", data["scenario"])
-                    print("Room temperature:",
-                          data["environment"]["temperature_c"], "C")
-                    print("Humidity:",
-                          data["environment"]["humidity_percent"], "%")
+
+                    print(
+                        "Room temperature:",
+                        data["environment"]["temperature_c"], "C"
+                    )
+
+                    print(
+                        "Humidity:",
+                        data["environment"]["humidity_percent"], "%"
+                    )
 
                     if alerts:
-                        alerts.sort(
-                            key=lambda alert: not alert.startswith("CRITICAL")
-                        )
-
                         print("\nACTIVE ALERTS:")
 
                         for alert in alerts:
@@ -173,8 +190,31 @@ def main():
                         print("\nSTATUS: NORMAL")
                         print("No anomalies detected.")
 
+                else:
+                    # Handle stale or missing data
+                    briefing = build_briefing(
+                        data, [], data_fresh=False
+                    )
+
+                    save_briefing(briefing)
+
+                    print("\nSTATUS: UNKNOWN")
+                    print("Data is outdated or unavailable.")
+
             except Exception as error:
+
                 print("MONITORING ERROR:", error)
+
+                # Handle monitoring or Firebase errors
+                try:
+                    briefing = build_briefing(
+                        None, [], data_fresh=False
+                    )
+
+                    save_briefing(briefing)
+
+                except Exception as briefing_error:
+                    print("BRIEFING ERROR:", briefing_error)
 
             time.sleep(5)
 
